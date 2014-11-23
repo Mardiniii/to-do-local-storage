@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+    <h1>Todo List</h1>
+
+    <input type="text" id="input" placeholder="¿Qué necesitas hacer?">
+    <ul class="todo-list">
+    </ul>
+  </div>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  
+  <script>
+    $(document).ready(function() {//Cuando el documento este cargado
+          
+      if(localStorage.getItem(0) === null){ //En la posicion 0 del local storage siempre almacenaremos el historial de posiciones ocupadas
+        localStorage.setItem(0,0);         //Validamos si existe un historial previo, sino asignamos 0 a esta posicion
+        elementsNumber = 0;                //Si el local storage se encuentra vacio asignamos el numero de elementos en 0
+        alert("En esta lista se han creado 0 tareas, de las cuales tiene 0 almacenadas en memoria");
+      }else{
+        var elementsNumber = parseInt(localStorage.getItem(0)); //Si existe un historial de datos previos recuperamos su valor y lo convertimos a entero
+        alert("En esta lista se han creado "+elementsNumber+" tareas, de las cuales tiene "+(localStorage.length-1)+ " almacenadas en memoria");
+        for(j=0;j<=elementsNumber;j++){ //Cargamos los datos previos que se encuentran en el local storage
+          if(localStorage.getItem(j+1) != null){ //Validamos cada posicion para no cargar datos o posiciones donde no haya nada al ser eliminadas del local storage
+            var loadText = localStorage.getItem(j+1);
+            var newLoad = $('<li class="itemTask"><input class="done" type="checkbox" name="check">' + loadText + '</li>');
+            $(".todo-list").append(newLoad);
+          }
+        }
+      }     
+
+      function taskExist(text){
+        var exist = false;
+        for(j=0;j<=elementsNumber && !exist;j++){ //For para validar tarea nueva
+          if(localStorage.getItem(j+1) != null){
+            var temp = localStorage.getItem(j+1);
+            temp = temp.toLowerCase();
+            text = text.toLowerCase();
+            if( temp === text ){
+              exist = true;
+            }
+          }
+        }
+        return exist;
+      }
+      
+      function saveTask(text){
+        localStorage.setItem(elementsNumber+1,text);
+        elementsNumber+=1;
+        localStorage.setItem(0,elementsNumber);
+      }
+      
+      function showTask(text){
+        var newDivTask = $('<li class="itemTask"><input class="done" type="checkbox" name="check">' + text + '</li>');
+        $(".todo-list").append(newDivTask);
+      }
+      
+      function removeTask(text){
+        var clear = false;
+        for(j=0;j<=elementsNumber && !clear;j++){ //For para validar tarea nueva
+          if(localStorage.getItem(j+1)===text){
+            localStorage.removeItem(j+1);
+            clear = true;
+          }
+        }      
+      }
+      
+                                        //IDENTIFICACION DE EVENTOS
+
+      $('#input').keyup(function(event){     //Analiza el tipo de tecla que digita el usuario
+        var keycode = event.keyCode;         //Almacene el keycode de cada tecla que digita el usuario
+        if(keycode == '13'){                 //Si el keycode es igual a 13 agregue tarea
+          var textTask = $(this).val();      //Almacene el nombre de la tarea en task
+          if(taskExist(textTask)){
+            alert("Esta tarea ya existe");
+          }else{
+            saveTask(textTask);
+            $("#input").val('');
+            showTask(textTask);
+          }
+        }//Cerrando if de deteccion de enter
+      });
+
+      //Funcion para cambiar background al posicionar mouse agregando boton remove
+      $('.todo-list').on('mouseenter','.itemTask',function(){
+        $(this).css('background-color', '#edeff0');
+        var clearTask = $('<div class="remove" style="display: inline-block;float: right"><strong>X</strong></div>');
+        $(this).append(clearTask);
+      });
+
+      //Funcion para cambiar background al abandonar mouse borrando boton remove
+      $('.todo-list').on('mouseleave','.itemTask',function(){
+        $(this).css('background-color', 'white');
+        $(this).find(".remove").remove();
+      });
+
+      //Funcion para cambiar el formato de texto de una tarea al identificar si esta hecha o no esta hecha
+      $('.todo-list').on('click','.done',function(){
+        if( $(this).is(':checked')){
+          $(this).parent().css({'color': '#AAA','text-decoration': 'line-through'});
+        }else{
+          $(this).parent().css({'color': 'black','text-decoration': 'none'});
+        }
+      });
+
+      //Funcion para detectar la intencion del usuario de eliminar una tarea
+      $('.todo-list').on('click','.remove',function(){
+        $(this).parent().remove();       
+        var textToDelete = $(this).parent().text();
+        var textToDelete = textToDelete.substring(0, textToDelete.length-1);
+        removeTask(textToDelete);  
+      });
+    });
+  </script>
+</body>
+</html>
